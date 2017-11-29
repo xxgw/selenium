@@ -20,7 +20,7 @@ public class SalaryTest {
 	private String nextId = "#rtNext .on";
 	private String jobsPerPageCss  = "#resultList .el .t1 a";
 	private String titleCss = "#resultList .el .t1 a:nth(0)";
-	private List<Job> jobs = new ArrayList();
+//	private List<Job> jobs = new ArrayList();
 
 	@Before
 	public void setUp() throws Exception {
