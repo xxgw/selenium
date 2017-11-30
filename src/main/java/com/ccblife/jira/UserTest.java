@@ -78,9 +78,11 @@ public class UserTest {
 				if (!"".equals(lastLoginTime) && !StringUtils.contains(userNameWebElement.getText(), "(Inactive)")) {
 					SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm");
 					/*
+					 * <ul>
 					 * <li>if login system today, the system shows "today" and actual time
 					 * 	   change the last login time to today implemented by Date()
 					 * <li>if login failed, the system shows "CAPTCHA required at next login Last Failed Login:"
+					 * </ul>
 					 */
 					try {
 							dateFormat.parse(lastLoginTime);
@@ -92,8 +94,8 @@ public class UserTest {
 					//disable the users whose last login time after baseline
 					try {
 						if (dateFormat.parse(lastLoginTime).before(dateFormat.parse(loginTimeBaseline))) {
-							System.out.println("Disable " + userNameWebElement.getText() + ": whose last login time is " + lastLoginTime);
 							disableUser(userNameWebElement.getText());
+							System.out.println("Disable " + userNameWebElement.getText() + ": whose last login time is " + lastLoginTime);
 						}
 					} catch (ParseException e) {
 						
@@ -111,9 +113,10 @@ public class UserTest {
 	}
 	
 	public void disableUser(String userName){
+		wait.until(ExpectedConditions.visibilityOfElementLocated(By.id(userEditPrefixId + userName)));
 		driver.findElement(By.id(userEditPrefixId + userName)).click();
-		wait.until(ExpectedConditions.presenceOfElementLocated(By.id(userEditActiveId)));
-		if ("checked".equals(driver.findElement(By.id(userEditActiveId)).getAttribute("checked"))){
+		wait.until(ExpectedConditions.visibilityOfElementLocated(By.id(userEditActiveId)));
+		if ("true".equals(driver.findElement(By.id(userEditActiveId)).getAttribute("checked"))){
 			driver.findElement(By.id(userEditActiveId)).click();
 			driver.findElement(By.id(userEditCancelId)).click();
 		}
@@ -121,7 +124,7 @@ public class UserTest {
 
 	public boolean hasNext() {
 		try {
-			WebElement nextWebElement = driver.findElement(By.cssSelector(nextById));
+			driver.findElement(By.cssSelector(nextById));
 			return true;
 		} catch (NoSuchElementException e) {
 			return false;
