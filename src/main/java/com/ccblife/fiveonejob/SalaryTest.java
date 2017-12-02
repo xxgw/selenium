@@ -1,10 +1,9 @@
 package com.ccblife.fiveonejob;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.By;
@@ -15,13 +14,15 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
 public class SalaryTest {
-	private NamedParameterJdbcTemplate jdbcTemplate;
+	private JdbcTemplate jdbcTemplate;
 	private WebDriver driver;
 	private WebDriverWait wait;
 	private String baseUrl;
@@ -30,8 +31,8 @@ public class SalaryTest {
 	private String idCss = ".t1 input";
 	private String titleCss = ".t1 a";
 	private String companyCss = ".t2 a";
-	private String locationCss = ".t1 a";
-	private String salaryCss = ".t1 a";
+	private String locationCss = ".t3";
+	private String salaryCss = ".t4";
 //	private List<Job> jobs = new ArrayList();
 
 	@Before
@@ -61,17 +62,25 @@ public class SalaryTest {
 				String title = jobWebElement.findElement(By.cssSelector(titleCss)).getText();
 				String company = jobWebElement.findElement(By.cssSelector(companyCss)).getText();
 				String location = jobWebElement.findElement(By.cssSelector(locationCss)).getText();
-				int salary = Integer.valueOf(jobWebElement.findElement(By.cssSelector(salaryCss)).getText());
+				String strSalary = jobWebElement.findElement(By.cssSelector(salaryCss)).getText();
+				String lowSalary = StringUtils.substringBefore(strSalary, "-");
+				String highSalary = StringUtils.substringBetween(strSalary, "-", "Íò");
+				BigDecimal salary;
+				try{
+					salary = (new BigDecimal(lowSalary).add(new BigDecimal(highSalary))).divide(new BigDecimal(2));
+				}
+				catch (Exception e){
+					continue; 
+				}
 				
-				Map<String, Object> params = new HashMap<>();
-				params.put("id", id);
-				params.put("title", title);
-				params.put("company", company);
-				params.put("location", location);
-				params.put("salary", salary);
+				String SQL = "insert into job (id, title, company, location, salary) values ('" 
+						+ id +"', '"
+						+ title + "', '"
+						+ company + "', '"
+						+ location +"', "
+						+ salary +")";
 				
-				String SQL = "insert into job (id, title, company, location, salary) values (?,?,?,?,?)";
-				jdbcTemplate.update(SQL, params);
+				jdbcTemplate.update(SQL);
 
 				System.out.println(id + title + company + location + salary);
 			}
@@ -93,12 +102,21 @@ public class SalaryTest {
 		}
 	}
 	
-	public NamedParameterJdbcTemplate jdbcTemplate(){
-		EmbeddedDatabaseBuilder  builder = new EmbeddedDatabaseBuilder();
-		EmbeddedDatabase db = builder
-							  .setType(EmbeddedDatabaseType.HSQL)
-							  .addScript("db/sql/create-table.sql")
-							  .build();
-		return new NamedParameterJdbcTemplate(db);
+	public JdbcTemplate jdbcTemplate(){
+		
+		DriverManagerDataSource dataSource = new DriverManagerDataSource();
+		dataSource.setDriverClassName("org.hsqldb.jdbcDriver");
+		dataSource.setUrl("jdbc:hsqldb:hsql://localhost/job");
+		dataSource.setUsername("sa");
+		dataSource.setPassword("");
+		
+		JdbcTemplate jt = new JdbcTemplate(dataSource);
+		return jt;
+//		EmbeddedDatabaseBuilder  builder = new EmbeddedDatabaseBuilder();
+//		EmbeddedDatabase db = builder
+//							  .setType(EmbeddedDatabaseType.HSQL)
+//							  .addScript("db/sql/create-table.sql")
+//							  .build();
+//		return new NamedParameterJdbcTemplate(db);
 	}
 }

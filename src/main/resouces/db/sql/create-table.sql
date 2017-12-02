@@ -4,5 +4,5 @@ ID VARCHAR(25) PRIMARY KEY,
 title VARCHAR(50),
 company VARCHAR(100),
 location VARCHAR(250),
-salary BIGINT
+salary DECIMAL
 );
